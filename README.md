@@ -1,74 +1,68 @@
-# 💸 SplitLedger — Shared Expense Splitter
+# SplitLedger
 
-A modern, responsive shared expense tracking and debt settlement web application built with **React 18**, **Vite**, and **React Router**.
+> A sleek, responsive shared expense tracking and debt simplification web app built with React 18 and Vite.
+
+[![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.0-646cff?style=flat-square&logo=vite)](https://vitejs.dev/)
+[![React Router](https://img.shields.io/badge/React_Router-v6-ca4245?style=flat-square&logo=react-router)](https://reactrouter.com/)
+[![License](https://img.shields.io/badge/License-MIT-teal?style=flat-square)](LICENSE)
 
 ---
 
-## 🚀 Quick Start
+## Overview
 
-Get the app running locally in 3 simple steps:
+SplitLedger makes splitting bills with flatmates, friends, and travel groups effortless. It tracks who paid what, calculates exact personal balances, and automatically compresses circular debts to the minimum number of repayments.
+
+---
+
+## Key Features
+
+- **Multi-Group Workspaces** — Manage shared expenses across trips, flats, and events.
+- **Smart Split Modes** — Split equally, by exact amounts, or by custom percentages with live validation.
+- **Debt Simplification** — Automatically compresses circular debts into the fewest repayments.
+- **Member Perspectives** — Switch active user view anytime to inspect your exact *"You owe"* vs *"Owed to you"* balance.
+- **Multi-Currency** — Seamlessly toggle between `₹ INR`, `$ USD`, `€ EUR`, and `£ GBP`.
+- **Ledger Search & CSV Export** — Real-time filterable ledger with instant CSV export.
+- **Local Persistence** — Data auto-saves to your browser with a 1-click demo reset.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or newer)
+- `npm`
+
+### Installation & Run
 
 ```bash
-# 1. Install dependencies
+# Clone the repository
+git clone https://github.com/ikash07/Expense-Splitter.git
+cd Expense-Splitter
+
+# Install dependencies
 npm install
 
-# 2. Start the development server
+# Start development server
 npm run dev
-
-# 3. Open in browser
-# Visit http://localhost:5173
 ```
 
-To create an optimized production build:
-```bash
-npm run build
-```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## ✨ Key Features
+## Tech Stack
 
-- **Multi-Group Workspaces**: Organize expenses across trips, flatmates, dinners, and events.
-- **3 Flexible Split Modes**:
-  - **Equal Split**: Divide bills equally with automated penny rounding reconciliation.
-  - **Exact Amounts**: Allocate specific currency values per participant with live balance validation.
-  - **Percentage Split**: Allocate custom percentages with real-time total share calculation.
-- **Smart Debt Simplification**: Built-in algorithm that compresses circular debts into the minimum number of repayment transfers.
-- **Member Perspective Switcher**: Switch views (*"Viewing as"*) to check personalized net balances (*"Owed to you"* vs *"You owe"*).
-- **Multi-Currency Support**: Instant currency switching between `₹ INR`, `$ USD`, `€ EUR`, and `£ GBP`.
-- **Search & CSV Export**: Filter expenses by search query, group, category, or payer, and export to CSV in one click.
-- **Persistent Storage**: All groups and expenses auto-save to `localStorage` with a 1-click **Reset Demo Dataset** button.
+| Technology | Purpose |
+| :--- | :--- |
+| **React 18** | UI component architecture & hooks state management |
+| **Vite** | Fast development server & production bundler |
+| **React Router v6** | Client-side page navigation & URL filter synchronization |
+| **Lucide React** | Clean, lightweight modern icons |
+| **CSS Modules** | Scoped styling and design token system |
 
 ---
 
-## 🛠️ Tech Stack
+## License
 
-- **Frontend**: [React 18](https://react.dev/)
-- **Tooling & Build**: [Vite](https://vitejs.dev/)
-- **Routing**: [React Router v6](https://reactrouter.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Styling**: Scoped CSS Modules & Custom Property Tokens
-
----
-
-## 📂 Project Structure
-
-```text
-src/
-├── components/
-│   ├── layout/       # AppShell, Topbar & Navigation
-│   ├── expenses/     # Add Expense, Create Group, Settle Modals & Cards
-│   ├── styled/       # Financial widgets & meters
-│   └── ui/           # Buttons, Badges, Cards, Avatars & Modals
-├── context/          # Global Expense Context & State Management
-├── data/             # Initial demo groups, members & expenses
-├── pages/            # Dashboard, Groups, Expenses, Settlements, Analytics
-├── styles/           # Global design tokens and theme styles
-└── utils/            # Calculation math, debt simplification & formatters
-```
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
