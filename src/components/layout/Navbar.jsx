@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -11,10 +11,14 @@ import {
   Menu, 
   X,
   RotateCcw,
-  Layers
+  Layers,
+  Sun,
+  Moon,
+  Zap
 } from 'lucide-react';
 import { useExpenses } from '../../context/ExpenseContext';
 import { Avatar } from '../common/Avatar';
+import { QuickAddModal } from '../expenses/QuickAddModal';
 import styles from './Navbar.module.css';
 
 export const Navbar = () => {
@@ -27,6 +31,21 @@ export const Navbar = () => {
   } = useExpenses();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('splitmate_theme') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('splitmate_theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -74,6 +93,18 @@ export const Navbar = () => {
 
             {/* Right Action Controls */}
             <div className={styles.actions}>
+              {/* Quick Split CTA Button */}
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setQuickAddOpen(true)}
+                title="1-Click Quick Split"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                <Zap size={14} />
+                <span>Quick Split</span>
+              </button>
+
               {/* Group Selector Dropdown */}
               <select
                 value={activeGroupId}
@@ -81,13 +112,24 @@ export const Navbar = () => {
                 className={styles.groupSelector}
                 title="Select Active Group"
               >
-                <option value="all">🌐 All Groups Combined</option>
+                <option value="all">🌐 All Groups</option>
                 {groups.map(grp => (
                   <option key={grp.id} value={grp.id}>
                     {grp.name}
                   </option>
                 ))}
               </select>
+
+              {/* Theme Toggle (Dark / Light) */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="btn btn-outline btn-sm"
+                title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+                style={{ padding: '0.4rem 0.6rem' }}
+              >
+                {theme === 'dark' ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="#6366F1" />}
+              </button>
 
               {/* Reset Data Button */}
               <button
@@ -165,6 +207,14 @@ export const Navbar = () => {
             );
           })}
         </div>
+      )}
+
+      {/* Quick Add Modal */}
+      {quickAddOpen && (
+        <QuickAddModal
+          isOpen={quickAddOpen}
+          onClose={() => setQuickAddOpen(false)}
+        />
       )}
     </>
   );

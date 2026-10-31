@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Sparkles,
   CheckCircle2,
-  Calendar
+  Calendar,
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
 import { StatCard } from '../components/common/StatCard';
@@ -21,6 +23,7 @@ import { Avatar } from '../components/common/Avatar';
 import { ExpenseCard } from '../components/expenses/ExpenseCard';
 import { DebtCard } from '../components/settlements/DebtCard';
 import { CategoryBreakdown } from '../components/analytics/CategoryBreakdown';
+import { QuickAddModal } from '../components/expenses/QuickAddModal';
 import { formatCurrency } from '../utils/formatters';
 
 export const Dashboard = () => {
@@ -37,6 +40,7 @@ export const Dashboard = () => {
     scopedMembers
   } = useExpenses();
 
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const isNetPositive = currentUserNet >= 0;
 
   // Recent 4 expenses using slice and sort
@@ -56,10 +60,10 @@ export const Dashboard = () => {
         style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'flex-start',
+          alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1.25rem',
-          marginBottom: '2rem'
+          marginBottom: '1.75rem'
         }}
       >
         <div>
@@ -70,23 +74,63 @@ export const Dashboard = () => {
             <span style={{ fontSize: '1.5rem' }}>👋</span>
           </div>
           <p style={{ marginTop: '0.35rem', fontSize: '0.95rem' }}>
-            Scope: <strong style={{ color: '#ffffff' }}>{activeGroup ? activeGroup.name : 'All Groups Combined'}</strong>
+            Scope: <strong style={{ color: '#ffffff' }}>{activeGroup ? activeGroup.name : 'All Groups'}</strong>
             {activeGroup && ` • ${scopedMembers.length} members`}
           </p>
         </div>
 
+        {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <Button 
+            variant="primary" 
+            icon={Zap}
+            onClick={() => setQuickAddOpen(true)}
+            style={{ boxShadow: '0 4px 18px rgba(99, 102, 241, 0.45)' }}
+          >
+            ⚡ Quick Split (2 Clicks)
+          </Button>
           <Link to="/add-expense">
-            <Button variant="primary" icon={PlusCircle}>
-              Add Expense / Split
+            <Button variant="secondary" icon={PlusCircle}>
+              Full Split
             </Button>
           </Link>
           <Link to="/settle">
-            <Button variant="secondary" icon={CheckCircle2}>
-              Settle Balances
+            <Button variant="success" icon={CheckCircle2}>
+              Settle Debts
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Easy Quick-Guide Banner */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: '1rem 1.25rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%)',
+          borderColor: 'rgba(99, 102, 241, 0.25)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Sparkles size={20} color="#818CF8" />
+          <span style={{ fontSize: '0.875rem', color: '#e2e8f0', fontWeight: 500 }}>
+            <strong>How to use SplitMate:</strong> 1️⃣ Pick your group &nbsp;→&nbsp; 2️⃣ Click "Quick Split" to add any bill &nbsp;→&nbsp; 3️⃣ Settle debts with 1 click!
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setQuickAddOpen(true)}
+          className="btn btn-outline btn-sm"
+          style={{ fontSize: '0.775rem', borderColor: 'var(--primary)', color: '#818CF8' }}
+        >
+          Try Quick Split Now
+        </button>
       </div>
 
       {/* KPI Financial Stat Cards Grid */}
@@ -242,6 +286,14 @@ export const Dashboard = () => {
           </Card>
         </div>
       </div>
+
+      {/* 1-Click Quick Add Modal */}
+      {quickAddOpen && (
+        <QuickAddModal
+          isOpen={quickAddOpen}
+          onClose={() => setQuickAddOpen(false)}
+        />
+      )}
     </div>
   );
 };
