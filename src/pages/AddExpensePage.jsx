@@ -187,9 +187,9 @@ export const AddExpensePage = () => {
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 style={{ fontSize: '1.85rem' }}>Split an Expense</h1>
+          <h1 style={{ fontSize: '1.85rem' }}>Add a Bill</h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Choose group, split method, and allocate shares in real time
+            Enter amount, who paid, and how to split it
           </p>
         </div>
       </div>
@@ -198,10 +198,10 @@ export const AddExpensePage = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
           
           {/* Left Column: Primary Details */}
-          <Card title="1. Expense Details">
+          <Card title="1. Bill Details">
             {/* Group Selection */}
             <div className="form-group">
-              <label className="form-label">Group / Trip</label>
+              <label className="form-label">Group</label>
               <select
                 value={groupId}
                 onChange={(e) => setGroupId(e.target.value)}
@@ -214,12 +214,38 @@ export const AddExpensePage = () => {
               </select>
             </div>
 
+            {/* Quick Preset Chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+              {[
+                { emoji: '🍕', label: 'Pizza', cat: 'food' },
+                { emoji: '🍿', label: 'Movies', cat: 'entertainment' },
+                { emoji: '🧃', label: 'Snacks', cat: 'groceries' },
+                { emoji: '🍦', label: 'Ice Cream', cat: 'food' },
+                { emoji: '🚕', label: 'Cab Ride', cat: 'travel' },
+                { emoji: '🎮', label: 'Games', cat: 'entertainment' }
+              ].map(chip => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => {
+                    setTitle(chip.label);
+                    setCategory(chip.cat);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ borderRadius: '9999px', fontSize: '0.78rem', padding: '0.35rem 0.65rem' }}
+                >
+                  <span>{chip.emoji}</span>
+                  <span>{chip.label}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Title */}
             <div className="form-group">
-              <label className="form-label">Expense Description / Title</label>
+              <label className="form-label">What was this for?</label>
               <input
                 type="text"
-                placeholder="e.g. Seafood Dinner at Fisherman's Wharf"
+                placeholder="e.g. Pizza, Ice Cream, Movie tickets"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="form-input"
@@ -230,7 +256,7 @@ export const AddExpensePage = () => {
             {/* Total Amount & Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
-                <label className="form-label">Total Amount ($)</label>
+                <label className="form-label">Amount</label>
                 <div className="input-icon-wrapper">
                   <span className="input-icon-left">$</span>
                   <input
@@ -243,6 +269,20 @@ export const AddExpensePage = () => {
                     className="form-input input-with-icon"
                     required
                   />
+                </div>
+                {/* Quick Add Buttons */}
+                <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.45rem' }}>
+                  {[50, 100, 200, 500].map(addVal => (
+                    <button
+                      key={addVal}
+                      type="button"
+                      onClick={() => setAmount(prev => String((parseFloat(prev) || 0) + addVal))}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '0.2rem 0.45rem', fontSize: '0.72rem', borderRadius: '8px' }}
+                    >
+                      +{addVal}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -261,7 +301,7 @@ export const AddExpensePage = () => {
             {/* Paid By & Category */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
-                <label className="form-label">Paid Upfront By</label>
+                <label className="form-label">Paid by</label>
                 <select
                   value={paidBy}
                   onChange={(e) => setPaidBy(e.target.value)}
@@ -293,7 +333,7 @@ export const AddExpensePage = () => {
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Notes (Optional)</label>
               <textarea
-                placeholder="Add receipt breakdown, tax notes, or payment links..."
+                placeholder="Add receipt notes or comments..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="form-textarea"
@@ -304,7 +344,7 @@ export const AddExpensePage = () => {
 
           {/* Right Column: Split Calculator Engine */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <Card title="2. Split Calculator">
+            <Card title="2. How to Split">
               {/* Split Mode Selector Tabs */}
               <div 
                 style={{ 
@@ -340,6 +380,28 @@ export const AddExpensePage = () => {
                   </button>
                 ))}
               </div>
+
+              {/* Equal Split Friendly Callout */}
+              {splitType === 'EQUAL' && numericAmount > 0 && (
+                <div 
+                  style={{ 
+                    padding: '0.85rem 1rem', 
+                    background: 'rgba(16, 185, 129, 0.1)', 
+                    border: '2px solid rgba(16, 185, 129, 0.3)', 
+                    borderRadius: '16px',
+                    textAlign: 'center',
+                    marginBottom: '1rem'
+                  }}
+                >
+                  <span style={{ fontSize: '1.4rem' }}>🍕</span>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#10B981', fontFamily: 'var(--font-heading)' }}>
+                    {formatCurrency(calculatedSplits.find(s => s.amount > 0)?.amount || 0)} each
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    Split evenly between {groupMembers.filter(m => memberSplits[m.id]?.included).length} friends
+                  </span>
+                </div>
+              )}
 
               {/* Members Dynamic Allocation Rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -510,9 +572,9 @@ export const AddExpensePage = () => {
                   variant="primary"
                   size="lg"
                   disabled={!validation.isValid}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', borderRadius: '9999px', fontSize: '1.05rem', fontWeight: 700, padding: '0.8rem' }}
                 >
-                  Save & Split Expense
+                  🎉 Save This Bill!
                 </Button>
               </div>
             </Card>

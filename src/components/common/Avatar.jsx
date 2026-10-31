@@ -33,11 +33,12 @@ export const Avatar = ({
     background: `linear-gradient(135deg, ${color} 0%, ${adjustColorBrightness(color, -25)} 100%)`,
     color: '#ffffff',
     fontSize: `${Math.max(11, Math.floor(size * 0.38))}px`,
+    fontFamily: 'var(--font-heading)',
     fontWeight: 700,
-    letterSpacing: '-0.02em',
+    letterSpacing: '0.01em',
     userSelect: 'none',
-    boxShadow: `0 2px 8px ${color}40`,
-    border: showBorder ? '2px solid rgba(255, 255, 255, 0.2)' : 'none',
+    boxShadow: `0 3px 8px ${color}50, 0 1px 2px rgba(0,0,0,0.1)`,
+    border: '2px solid rgba(255, 255, 255, 0.75)',
     ...style
   };
 

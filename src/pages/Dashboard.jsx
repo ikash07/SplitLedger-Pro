@@ -1,39 +1,28 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Users, 
-  PlusCircle, 
-  Receipt, 
   ArrowRight,
-  Sparkles,
-  CheckCircle2,
-  Calendar,
   Zap,
-  HelpCircle
+  HandCoins,
+  PartyPopper,
+  Sparkles,
+  Users
 } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
-import { StatCard } from '../components/common/StatCard';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
-import { Avatar } from '../components/common/Avatar';
 import { ExpenseCard } from '../components/expenses/ExpenseCard';
 import { DebtCard } from '../components/settlements/DebtCard';
-import { CategoryBreakdown } from '../components/analytics/CategoryBreakdown';
 import { QuickAddModal } from '../components/expenses/QuickAddModal';
+import { PiggyIcon } from '../components/common/CustomIcons';
 import { formatCurrency } from '../utils/formatters';
 
 export const Dashboard = () => {
   const { 
     currentUser, 
     activeGroup, 
-    activeGroupId,
     scopedExpenses, 
     simplifiedDebts, 
-    currentUserNet, 
     currentUserOwed, 
     currentUserOwes, 
     totalSpend,
@@ -41,257 +30,310 @@ export const Dashboard = () => {
   } = useExpenses();
 
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const isNetPositive = currentUserNet >= 0;
+  const [quickCategory, setQuickCategory] = useState('food');
 
-  // Recent 4 expenses using slice and sort
+  const openQuickWithCat = (cat) => {
+    setQuickCategory(cat);
+    setQuickAddOpen(true);
+  };
+
   const recentExpenses = [...scopedExpenses]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
 
-  // Filter debts involving current user
-  const myDebts = simplifiedDebts.filter(
-    d => d.fromMemberId === currentUser.id || d.toMemberId === currentUser.id
-  );
+  const firstName = currentUser?.name?.split(' ')[0] || 'Friend';
 
   return (
-    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
-      {/* Welcome & Scope Header */}
+    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '3.5rem' }}>
+
+      {/* ── Playful Welcoming Header ── */}
       <div 
         style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '1.25rem',
-          marginBottom: '1.75rem'
+          gap: '1rem',
+          marginBottom: '2rem'
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <h1 style={{ fontSize: '2rem' }}>
-              Welcome back, <span className="gradient-text">{currentUser.name.split(' ')[0]}</span>
-            </h1>
-            <span style={{ fontSize: '1.5rem' }}>👋</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+            <span className="badge badge-primary">
+              <Sparkles size={13} />
+              Piggy Bank Dashboard
+            </span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              · {activeGroup ? activeGroup.name : 'All Squads Combined'}
+            </span>
           </div>
-          <p style={{ marginTop: '0.35rem', fontSize: '0.95rem' }}>
-            Scope: <strong style={{ color: '#ffffff' }}>{activeGroup ? activeGroup.name : 'All Groups'}</strong>
-            {activeGroup && ` • ${scopedMembers.length} members`}
+
+          <h1 style={{ fontSize: '2.3rem', margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>Hey, <span className="gradient-text">{firstName}</span>!</span>
+            <span style={{ fontSize: '2rem' }}>🎈</span>
+          </h1>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '1rem', color: 'var(--text-secondary)' }}>
+            Track who bought what and who needs to pay whom with zero stress!
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        {/* Big 3D CTA Buttons */}
+        <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
           <Button 
             variant="primary" 
-            icon={Zap}
+            size="lg"
             onClick={() => setQuickAddOpen(true)}
-            style={{ boxShadow: '0 4px 18px rgba(99, 102, 241, 0.45)' }}
           >
-            ⚡ Quick Split (2 Clicks)
+            <span>➕</span>
+            <span>Add a Bill</span>
           </Button>
-          <Link to="/add-expense">
-            <Button variant="secondary" icon={PlusCircle}>
-              Full Split
-            </Button>
-          </Link>
+
           <Link to="/settle">
-            <Button variant="success" icon={CheckCircle2}>
-              Settle Debts
+            <Button 
+              variant="outline" 
+              size="lg"
+            >
+              <span>🤝</span>
+              <span>Pay Back</span>
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Easy Quick-Guide Banner */}
-      <div
+      {/* ── 3 Big Piggy Bank Pocket Cards ── */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', 
+          gap: '1.25rem',
+          marginBottom: '2.25rem'
+        }}
+      >
+        {/* Card 1: Money Friends Owe You */}
+        <div 
+          className="glass-panel"
+          style={{
+            padding: '1.6rem',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%)',
+            borderColor: 'rgba(16, 185, 129, 0.35)',
+            position: 'relative'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#059669', fontFamily: 'var(--font-heading)' }}>
+              FRIENDS OWE YOU
+            </span>
+            <span style={{ fontSize: '1.8rem' }}>💚</span>
+          </div>
+
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#10B981', fontFamily: 'var(--font-heading)' }}>
+            {formatCurrency(currentUserOwed)}
+          </div>
+
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            {currentUserOwed > 0 
+              ? '🎉 Friends will pay you this money back!'
+              : '🌟 Nobody owes you anything right now.'}
+          </p>
+        </div>
+
+        {/* Card 2: Money You Need to Pay */}
+        <div 
+          className="glass-panel"
+          style={{
+            padding: '1.6rem',
+            background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(244, 63, 94, 0.04) 100%)',
+            borderColor: 'rgba(244, 63, 94, 0.35)',
+            position: 'relative'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#E11D48', fontFamily: 'var(--font-heading)' }}>
+              YOU NEED TO PAY
+            </span>
+            <span style={{ fontSize: '1.8rem' }}>💸</span>
+          </div>
+
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#F43F5E', fontFamily: 'var(--font-heading)' }}>
+            {formatCurrency(currentUserOwes)}
+          </div>
+
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            {currentUserOwes > 0 
+              ? 'Don’t forget to pay your friends back!'
+              : '🎉 You are all even! You don’t owe a cent.'}
+          </p>
+        </div>
+
+        {/* Card 3: Total Spent by Squad */}
+        <div 
+          className="glass-panel"
+          style={{
+            padding: '1.6rem',
+            background: 'linear-gradient(135deg, rgba(255, 75, 114, 0.12) 0%, rgba(139, 92, 246, 0.05) 100%)',
+            borderColor: 'rgba(255, 75, 114, 0.35)',
+            position: 'relative'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#FF4B72', fontFamily: 'var(--font-heading)' }}>
+              TOTAL SQUAD SPEND
+            </span>
+            <span style={{ fontSize: '1.8rem' }}>🍕</span>
+          </div>
+
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#FF4B72', fontFamily: 'var(--font-heading)' }}>
+            {formatCurrency(totalSpend)}
+          </div>
+
+          <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            All {scopedExpenses.length} shared bills combined
+          </p>
+        </div>
+      </div>
+
+      {/* ── 1-Tap Quick Split Bar ── */}
+      <div 
         className="glass-panel"
         style={{
-          padding: '1rem 1.25rem',
-          marginBottom: '2rem',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2.25rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '1rem',
-          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%)',
-          borderColor: 'rgba(99, 102, 241, 0.25)'
+          background: 'var(--bg-tertiary)',
+          border: '2px solid var(--border-card)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Sparkles size={20} color="#818CF8" />
-          <span style={{ fontSize: '0.875rem', color: '#e2e8f0', fontWeight: 500 }}>
-            <strong>How to use SplitMate:</strong> 1️⃣ Pick your group &nbsp;→&nbsp; 2️⃣ Click "Quick Split" to add any bill &nbsp;→&nbsp; 3️⃣ Settle debts with 1 click!
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <span style={{ fontSize: '1.5rem' }}>⚡</span>
+          <div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
+              1-Tap Quick Split
+            </div>
+            <div style={{ fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+              What did you buy? Tap an icon to split in seconds!
+            </div>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setQuickAddOpen(true)}
-          className="btn btn-outline btn-sm"
-          style={{ fontSize: '0.775rem', borderColor: 'var(--primary)', color: '#818CF8' }}
-        >
-          Try Quick Split Now
-        </button>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {[
+            { emoji: '🍕', label: 'Pizza', cat: 'food' },
+            { emoji: '🍿', label: 'Movies', cat: 'entertainment' },
+            { emoji: '🧃', label: 'Snacks', cat: 'groceries' },
+            { emoji: '🍦', label: 'Ice Cream', cat: 'food' },
+            { emoji: '🚕', label: 'Cab Ride', cat: 'travel' },
+            { emoji: '🎮', label: 'Games', cat: 'entertainment' }
+          ].map(chip => (
+            <button
+              key={chip.label}
+              type="button"
+              onClick={() => openQuickWithCat(chip.cat)}
+              className="btn btn-secondary btn-sm"
+              style={{
+                borderRadius: '9999px',
+                fontSize: '0.85rem',
+                padding: '0.45rem 0.85rem'
+              }}
+            >
+              <span>{chip.emoji}</span>
+              <span>{chip.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* KPI Financial Stat Cards Grid */}
-      <div 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-          gap: '1.25rem',
-          marginBottom: '2.5rem'
-        }}
-      >
-        <StatCard
-          label="Total Net Balance"
-          value={formatCurrency(currentUserNet)}
-          subtitle={isNetPositive ? 'You are owed money overall' : 'You owe money overall'}
-          variant={isNetPositive ? 'success' : 'danger'}
-          icon={isNetPositive ? TrendingUp : TrendingDown}
-          trend={
-            <Badge variant={isNetPositive ? 'success' : 'danger'}>
-              {isNetPositive ? 'Positive Net' : 'Action Required'}
-            </Badge>
-          }
-        />
-
-        <StatCard
-          label="You Are Owed"
-          value={formatCurrency(currentUserOwed)}
-          subtitle="From your friends across groups"
-          variant="success"
-          icon={TrendingUp}
-        />
-
-        <StatCard
-          label="You Owe"
-          value={formatCurrency(currentUserOwes)}
-          subtitle="To be settled with members"
-          variant="danger"
-          icon={TrendingDown}
-        />
-
-        <StatCard
-          label="Total Group Spend"
-          value={formatCurrency(totalSpend)}
-          subtitle={`${scopedExpenses.length} total shared bills`}
-          variant="primary"
-          icon={DollarSign}
-        />
-      </div>
-
-      {/* Main Content Grid: 2 Columns */}
+      {/* ── Two Columns: Who Pays Whom & Recent Bills ── */}
       <div 
         style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', 
-          gap: '1.5rem',
+          gap: '1.75rem',
           alignItems: 'start'
         }}
       >
-        {/* Left Column: Debts & Recent Expenses */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Quick Settlement Debts */}
-          <Card 
-            title="Simplified Debt Settlements" 
-            subtitle="Algorithmically minimized cross-payments"
-            actions={
-              <Link to="/settle" style={{ fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                View All <ArrowRight size={14} />
+        {/* Left Column: Who Pays Whom */}
+        <Card 
+          title="🤝 Who Pays Whom?" 
+          subtitle="No math needed! Just follow these easy payments:"
+          actions={
+            simplifiedDebts.length > 0 && (
+              <Link to="/settle" style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                See all <ArrowRight size={14} />
               </Link>
-            }
-          >
-            {simplifiedDebts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
-                <CheckCircle2 size={32} color="#10B981" style={{ marginBottom: '0.5rem' }} />
-                <p>All settled up! No outstanding balances in this group.</p>
-              </div>
-            ) : (
-              <div>
-                {simplifiedDebts.slice(0, 3).map(tx => (
-                  <DebtCard key={tx.id} transaction={tx} />
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Recent Expenses */}
-          <Card 
-            title="Recent Shared Expenses" 
-            subtitle={`Showing latest ${recentExpenses.length} records`}
-            actions={
-              <Link to="/expenses" style={{ fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                All Expenses <ArrowRight size={14} />
-              </Link>
-            }
-          >
-            {recentExpenses.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
-                No expenses recorded yet.
-              </div>
-            ) : (
-              <div>
-                {recentExpenses.map(exp => (
-                  <ExpenseCard key={exp.id} expense={exp} />
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Right Column: Category Breakdown & Active Group Members */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <CategoryBreakdown />
-
-          {/* Active Members Card */}
-          <Card 
-            title="Group Members" 
-            subtitle={`${scopedMembers.length} active participants`}
-            actions={
-              <Link to="/groups" style={{ fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                Manage <ArrowRight size={14} />
-              </Link>
-            }
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {scopedMembers.map(member => (
-                <div 
-                  key={member.id} 
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0.25rem',
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.04)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Avatar name={member.name} color={member.avatarColor} size={32} />
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f8fafc' }}>
-                        {member.name} {member.id === currentUser.id && '(You)'}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{member.email}</div>
-                    </div>
-                  </div>
-
-                  {member.isCurrentUser ? (
-                    <Badge variant="primary">Active User</Badge>
-                  ) : (
-                    <Badge variant="neutral">Member</Badge>
-                  )}
+            )
+          }
+        >
+          {simplifiedDebts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+              <div style={{ fontSize: '3.2rem', marginBottom: '0.5rem' }}>🎉</div>
+              <h4 style={{ fontSize: '1.25rem', marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
+                Everyone Is All Square!
+              </h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '320px', margin: '0 auto' }}>
+                Nobody owes anyone anything right now! Add a new bill whenever you buy snacks or tickets.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {simplifiedDebts.slice(0, 3).map(tx => (
+                <DebtCard key={tx.id} transaction={tx} />
+              ))}
+              {simplifiedDebts.length > 3 && (
+                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+                  <Link to="/settle" className="btn btn-secondary btn-sm">
+                    +{simplifiedDebts.length - 3} more payments
+                  </Link>
                 </div>
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* Right Column: Recent Bills */}
+        <Card 
+          title="🍕 Recent Bills" 
+          subtitle="Latest things bought and shared"
+          actions={
+            <Link to="/expenses" style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              See all bills <ArrowRight size={14} />
+            </Link>
+          }
+        >
+          {recentExpenses.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🧾</div>
+              <h4 style={{ fontSize: '1.15rem', marginBottom: '0.35rem' }}>No bills added yet</h4>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                Click "+ Add a Bill" above to add your first expense!
+              </p>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => setQuickAddOpen(true)}
+              >
+                Add First Bill
+              </Button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {recentExpenses.map(exp => (
+                <ExpenseCard key={exp.id} expense={exp} />
               ))}
             </div>
-          </Card>
-        </div>
+          )}
+        </Card>
       </div>
 
-      {/* 1-Click Quick Add Modal */}
+      {/* Quick Add Modal */}
       {quickAddOpen && (
-        <QuickAddModal
-          isOpen={quickAddOpen}
-          onClose={() => setQuickAddOpen(false)}
+        <QuickAddModal 
+          isOpen={quickAddOpen} 
+          onClose={() => setQuickAddOpen(false)} 
+          initialCategory={quickCategory}
         />
       )}
     </div>

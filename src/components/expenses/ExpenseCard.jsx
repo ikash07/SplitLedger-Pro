@@ -35,14 +35,14 @@ export const ExpenseCard = ({ expense }) => {
   if (isPayer) {
     const lentAmount = Number(expense.amount) - userOwesAmount;
     if (lentAmount > 0) {
-      userShareText = `you lent ${formatCurrency(lentAmount)}`;
+      userShareText = `you get back ${formatCurrency(lentAmount)}`;
       shareClass = styles.userShareLent;
     } else {
       userShareText = `you paid for yourself`;
       shareClass = styles.userShareNone;
     }
   } else if (userOwesAmount > 0) {
-    userShareText = `you borrowed ${formatCurrency(userOwesAmount)}`;
+    userShareText = `you owe ${formatCurrency(userOwesAmount)}`;
     shareClass = styles.userShareBorrowed;
   }
 
@@ -102,10 +102,13 @@ export const ExpenseCard = ({ expense }) => {
               )}
 
               <Badge 
-                variant="primary" 
-                style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}
+                variant="neutral" 
+                style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem', opacity: 0.85 }}
               >
-                {expense.splitType || 'EQUAL'}
+                {expense.splitType === 'EQUAL' ? 'Split equally' :
+                 expense.splitType === 'EXACT' ? 'Exact split' :
+                 expense.splitType === 'PERCENTAGE' ? '% split' :
+                 expense.splitType === 'SHARES' ? 'By shares' : 'Split equally'}
               </Badge>
             </div>
           </div>

@@ -1,257 +1,462 @@
-import React, { createContext, useContext, useMemo, useCallback } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { 
-  INITIAL_MEMBERS, 
-  INITIAL_GROUPS, 
-  INITIAL_EXPENSES, 
-  INITIAL_ACTIVITIES,
-  CATEGORIES 
-} from '../data/initialData';
-import { calculateNetBalances, simplifyDebts } from '../utils/debtSimplifier';
-import { calculateTotalSpend, getCategoryBreakdown } from '../utils/arrayHelpers';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
+import {
+  INITIAL_MEMBERS,
+  INITIAL_GROUPS,
+  INITIAL_EXPENSES,
+  INITIAL_SETTLEMENTS,
+} from '../data/seedData';
+import {
+  calculateMemberLedger,
+  simplifyDebts,
+  roundCurrency,
+  isAllSettled,
+} from '../utils/expenseCalculations';
+
+const STORAGE_KEY = 'splitledger_state_v1';
+
+const MEMBER_PALETTE = [
+  '#0f766e',
+  '#2563eb',
+  '#db2777',
+  '#d97706',
+  '#7c3aed',
+  '#059669',
+  '#dc2626',
+  '#4f46e5',
+];
 
 const ExpenseContext = createContext(null);
 
-export const ExpenseProvider = ({ children }) => {
-  // Persistent state using custom hook useLocalStorage
-  const [members, setMembers] = useLocalStorage('splitmate_members', INITIAL_MEMBERS);
-  const [groups, setGroups] = useLocalStorage('splitmate_groups', INITIAL_GROUPS);
-  const [expenses, setExpenses] = useLocalStorage('splitmate_expenses', INITIAL_EXPENSES);
-  const [activities, setActivities] = useLocalStorage('splitmate_activities', INITIAL_ACTIVITIES);
-  const [activeGroupId, setActiveGroupId] = useLocalStorage('splitmate_active_group', 'grp-1');
-  const [currentUserId] = useLocalStorage('splitmate_user_id', 'm1');
-
-  // Lookups using array operations
-  const membersMap = useMemo(() => {
-    return members.reduce((acc, m) => {
-      acc[m.id] = m;
-      return acc;
-    }, {});
-  }, [members]);
-
-  const currentUser = useMemo(() => {
-    return members.find(m => m.id === currentUserId) || members[0];
-  }, [members, currentUserId]);
-
-  const activeGroup = useMemo(() => {
-    if (activeGroupId === 'all') return null;
-    return groups.find(g => g.id === activeGroupId) || null;
-  }, [groups, activeGroupId]);
-
-  // Expenses scoped to active group or all
-  const scopedExpenses = useMemo(() => {
-    if (activeGroupId === 'all') return expenses;
-    return expenses.filter(exp => exp.groupId === activeGroupId);
-  }, [expenses, activeGroupId]);
-
-  // Members scoped to active group or all
-  const scopedMembers = useMemo(() => {
-    if (!activeGroup) return members;
-    return members.filter(m => activeGroup.members.includes(m.id));
-  }, [members, activeGroup]);
-
-  // Compute Net Balances using array reduce
-  const netBalances = useMemo(() => {
-    return calculateNetBalances(scopedMembers, scopedExpenses);
-  }, [scopedMembers, scopedExpenses]);
-
-  // Compute Simplified Debts using greedy algorithm
-  const simplifiedDebts = useMemo(() => {
-    return simplifyDebts(netBalances, membersMap);
-  }, [netBalances, membersMap]);
-
-  // Financial aggregates for current user
-  const currentUserNet = useMemo(() => {
-    return netBalances[currentUserId] || 0;
-  }, [netBalances, currentUserId]);
-
-  const { currentUserOwed, currentUserOwes } = useMemo(() => {
-    let owed = 0;
-    let owes = 0;
-    simplifiedDebts.forEach(debt => {
-      if (debt.toMemberId === currentUserId) {
-        owed += debt.amount;
+function loadInitialState() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (
+        Array.isArray(parsed.members) &&
+        Array.isArray(parsed.groups) &&
+        Array.isArray(parsed.expenses)
+      ) {
+        return {
+          members: parsed.members,
+          groups: parsed.groups,
+          expenses: parsed.expenses,
+          settlements: Array.isArray(parsed.settlements) ? parsed.settlements : [],
+          activeUserId: parsed.activeUserId || parsed.members[0]?.id || 'aarav',
+          currency: parsed.currency || 'INR',
+        };
       }
-      if (debt.fromMemberId === currentUserId) {
-        owes += debt.amount;
-      }
+    }
+  } catch (err) {
+    console.warn('Could not read saved state from localStorage:', err);
+  }
+
+  return {
+    members: INITIAL_MEMBERS,
+    groups: INITIAL_GROUPS,
+    expenses: INITIAL_EXPENSES,
+    settlements: INITIAL_SETTLEMENTS,
+    activeUserId: 'aarav',
+    currency: 'INR',
+  };
+}
+
+export function ExpenseProvider({ children }) {
+  const initial = useMemo(() => loadInitialState(), []);
+
+  const [members, setMembers] = useState(initial.members);
+  const [groups, setGroups] = useState(initial.groups);
+  const [expenses, setExpenses] = useState(initial.expenses);
+  const [settlements, setSettlements] = useState(initial.settlements);
+  const [activeUserId, setActiveUserId] = useState(initial.activeUserId);
+  const [currency, setCurrency] = useState(initial.currency);
+
+  // Global modal & toast feedback state
+  const [expenseModalState, setExpenseModalState] = useState({
+    isOpen: false,
+    defaultGroupId: '',
+    editingExpense: null,
+  });
+  const [toast, setToast] = useState(null);
+
+  // Persist ledger state to localStorage whenever core data changes
+  useEffect(() => {
+    try {
+      const payload = JSON.stringify({
+        members,
+        groups,
+        expenses,
+        settlements,
+        activeUserId,
+        currency,
+      });
+      window.localStorage.setItem(STORAGE_KEY, payload);
+    } catch (err) {
+      console.warn('Could not save state to localStorage:', err);
+    }
+  }, [members, groups, expenses, settlements, activeUserId, currency]);
+
+  // Auto-dismiss toast notifications
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timer = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const showToast = useCallback((message, tone = 'success') => {
+    setToast({ id: Date.now(), message, tone });
+  }, []);
+
+  const activeUser = useMemo(
+    () => members.find((m) => m.id === activeUserId) || members[0],
+    [members, activeUserId]
+  );
+
+  // Overall member balances & simplified settlements
+  const overallLedger = useMemo(
+    () => calculateMemberLedger(members, expenses, settlements),
+    [members, expenses, settlements]
+  );
+
+  const overallTransfers = useMemo(
+    () => simplifyDebts(overallLedger),
+    [overallLedger]
+  );
+
+  // Per-group enriched summaries computed with .map() and .filter()
+  const groupSummaries = useMemo(() => {
+    return groups.map((group) => {
+      const groupMembers = members.filter((m) => group.memberIds.includes(m.id));
+      const groupExpenses = expenses.filter((e) => e.groupId === group.id);
+      const groupSettlements = settlements.filter((s) => s.groupId === group.id);
+
+      const totalSpend = roundCurrency(
+        groupExpenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0)
+      );
+
+      const ledger = calculateMemberLedger(
+        groupMembers,
+        groupExpenses,
+        groupSettlements
+      );
+      const transfers = simplifyDebts(ledger);
+      const activeEntry = ledger.find((l) => l.memberId === activeUser?.id);
+
+      return {
+        ...group,
+        members: groupMembers,
+        expenses: groupExpenses,
+        settlements: groupSettlements,
+        expenseCount: groupExpenses.length,
+        totalSpend,
+        ledger,
+        transfers,
+        allSettled: isAllSettled(ledger),
+        activeUserNet: activeEntry ? activeEntry.netBalance : 0,
+      };
     });
-    return { 
-      currentUserOwed: Math.round(owed * 100) / 100, 
-      currentUserOwes: Math.round(owes * 100) / 100 
+  }, [groups, members, expenses, settlements, activeUser]);
+
+  // Active user KPI metrics across all groups
+  const activeUserSummary = useMemo(() => {
+    const entry = overallLedger.find((item) => item.memberId === activeUser?.id);
+    const totalGroupSpend = roundCurrency(
+      expenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0)
+    );
+
+    // Sum per-group positive vs negative positions for clearer real-world breakdown
+    const owedToYou = roundCurrency(
+      groupSummaries
+        .filter((g) => g.activeUserNet > 0.01)
+        .reduce((sum, g) => sum + g.activeUserNet, 0)
+    );
+    const youOwe = roundCurrency(
+      groupSummaries
+        .filter((g) => g.activeUserNet < -0.01)
+        .reduce((sum, g) => sum + Math.abs(g.activeUserNet), 0)
+    );
+
+    return {
+      totalGroupSpend,
+      totalPaid: entry?.totalPaid || 0,
+      totalShare: entry?.totalShare || 0,
+      netBalance: entry?.netBalance || 0,
+      owedToYou,
+      youOwe,
     };
-  }, [simplifiedDebts, currentUserId]);
+  }, [overallLedger, expenses, groupSummaries, activeUser]);
 
-  const totalSpend = useMemo(() => {
-    return calculateTotalSpend(scopedExpenses);
-  }, [scopedExpenses]);
+  // CRUD Handlers
+  const addExpense = useCallback(
+    (expenseInput) => {
+      const newExpense = {
+        ...expenseInput,
+        id: `exp-${Date.now()}`,
+        amount: roundCurrency(expenseInput.amount),
+      };
+      setExpenses((prev) => [newExpense, ...prev]);
+      showToast(`Added "${newExpense.title}" to ledger`);
+      return newExpense;
+    },
+    [showToast]
+  );
 
-  const categoryBreakdown = useMemo(() => {
-    return getCategoryBreakdown(scopedExpenses, CATEGORIES);
-  }, [scopedExpenses]);
+  const updateExpense = useCallback(
+    (expenseId, updatedFields) => {
+      setExpenses((prev) =>
+        prev.map((exp) =>
+          exp.id === expenseId
+            ? {
+                ...exp,
+                ...updatedFields,
+                id: expenseId,
+                amount: roundCurrency(updatedFields.amount),
+              }
+            : exp
+        )
+      );
+      showToast(`Updated "${updatedFields.title}"`);
+    },
+    [showToast]
+  );
 
-  // Actions
-  const addExpense = useCallback((newExpense) => {
-    const id = `exp-${Date.now()}`;
-    const expenseWithId = { ...newExpense, id };
+  const deleteExpense = useCallback(
+    (expenseId) => {
+      const target = expenses.find((e) => e.id === expenseId);
+      setExpenses((prev) => prev.filter((exp) => exp.id !== expenseId));
+      showToast(
+        target ? `Removed "${target.title}"` : 'Expense deleted',
+        'neutral'
+      );
+    },
+    [expenses, showToast]
+  );
 
-    setExpenses(prev => [expenseWithId, ...prev]);
+  const createMemberRecord = useCallback(
+    ({ name, email = '', handle = '' }) => {
+      const cleanName = name.trim();
+      const slug = cleanName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      const uniqueId = `${slug || 'member'}-${Date.now().toString().slice(-4)}`;
+      const color = MEMBER_PALETTE[members.length % MEMBER_PALETTE.length];
 
-    // Add activity record
-    const newActivity = {
-      id: `act-${Date.now()}`,
-      type: 'EXPENSE_ADDED',
-      title: expenseWithId.title,
-      amount: expenseWithId.amount,
-      actorId: expenseWithId.paidBy,
-      groupId: expenseWithId.groupId,
-      timestamp: new Date().toISOString()
-    };
-    setActivities(prev => [newActivity, ...prev]);
+      const newMember = {
+        id: uniqueId,
+        name: cleanName,
+        email: email.trim() || `${slug || 'user'}@example.com`,
+        handle: handle.trim() || `${slug || 'user'}@upi`,
+        color,
+      };
+      setMembers((prev) => [...prev, newMember]);
+      return newMember;
+    },
+    [members.length]
+  );
 
-    return expenseWithId;
-  }, [setExpenses, setActivities]);
+  const addGroup = useCallback(
+    ({ name, type, description, memberIds, newMemberNames = [] }) => {
+      const createdMembers = newMemberNames
+        .map((n) => n.trim())
+        .filter(Boolean)
+        .map((n, idx) => {
+          const slug = n.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          return {
+            id: `${slug || 'member'}-${Date.now()}-${idx}`,
+            name: n,
+            email: `${slug || 'member'}@example.com`,
+            handle: `${slug || 'member'}@upi`,
+            color:
+              MEMBER_PALETTE[(members.length + idx) % MEMBER_PALETTE.length],
+          };
+        });
 
-  const deleteExpense = useCallback((expenseId) => {
-    const deletedExp = expenses.find(e => e.id === expenseId);
-    setExpenses(prev => prev.filter(e => e.id !== expenseId));
+      if (createdMembers.length > 0) {
+        setMembers((prev) => [...prev, ...createdMembers]);
+      }
 
-    if (deletedExp) {
-      setActivities(prev => [
-        {
-          id: `act-${Date.now()}`,
-          type: 'EXPENSE_DELETED',
-          title: `Removed: ${deletedExp.title}`,
-          amount: deletedExp.amount,
-          actorId: currentUserId,
-          groupId: deletedExp.groupId,
-          timestamp: new Date().toISOString()
-        },
-        ...prev
-      ]);
-    }
-  }, [expenses, currentUserId, setExpenses, setActivities]);
+      const finalMemberIds = Array.from(
+        new Set([...memberIds, ...createdMembers.map((m) => m.id)])
+      );
 
-  const addGroup = useCallback((groupData) => {
-    const newGroup = {
-      ...groupData,
-      id: `grp-${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      members: groupData.members || [currentUserId]
-    };
-    setGroups(prev => [...prev, newGroup]);
-    setActiveGroupId(newGroup.id);
-    return newGroup;
-  }, [currentUserId, setGroups, setActiveGroupId]);
+      const newGroup = {
+        id: `grp-${Date.now()}`,
+        name: name.trim(),
+        type: type || 'Trip',
+        description: description.trim(),
+        memberIds: finalMemberIds,
+        createdAt: new Date().toISOString().slice(0, 10),
+      };
 
-  const addMember = useCallback((memberData) => {
-    const colors = ['#6366F1', '#EC4899', '#10B981', '#06B6D4', '#F59E0B', '#8B5CF6', '#14B8A6'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    const newMember = {
-      id: `m-${Date.now()}`,
-      name: memberData.name,
-      email: memberData.email || `${memberData.name.toLowerCase().replace(/\s+/g, '')}@example.com`,
-      avatarColor: randomColor
-    };
+      setGroups((prev) => [newGroup, ...prev]);
+      showToast(`Created group "${newGroup.name}"`);
+      return newGroup;
+    },
+    [members.length, showToast]
+  );
 
-    setMembers(prev => [...prev, newMember]);
+  const addMemberToGroup = useCallback(
+    (groupId, { existingMemberId, newName, newHandle }) => {
+      let memberIdToAdd = existingMemberId;
+      let labelName = '';
 
-    if (memberData.groupId) {
-      setGroups(prev => prev.map(g => {
-        if (g.id === memberData.groupId && !g.members.includes(newMember.id)) {
-          return { ...g, members: [...g.members, newMember.id] };
-        }
-        return g;
-      }));
-    }
+      if (!memberIdToAdd && newName?.trim()) {
+        const created = createMemberRecord({
+          name: newName,
+          handle: newHandle,
+        });
+        memberIdToAdd = created.id;
+        labelName = created.name;
+      } else {
+        const found = members.find((m) => m.id === memberIdToAdd);
+        labelName = found?.name || 'Member';
+      }
 
-    return newMember;
-  }, [setMembers, setGroups]);
+      if (!memberIdToAdd) return null;
 
-  const settleDebt = useCallback((fromMemberId, toMemberId, amount, note = 'Debt settled') => {
-    // Record settlement as a balancing expense or settlement activity
-    const settlementId = `exp-settle-${Date.now()}`;
-    const settlementExpense = {
-      id: settlementId,
-      groupId: activeGroupId !== 'all' ? activeGroupId : groups[0]?.id || 'grp-1',
-      title: `Settlement: ${membersMap[fromMemberId]?.name || 'Member'} paid ${membersMap[toMemberId]?.name || 'Member'}`,
-      amount: Number(amount),
-      paidBy: fromMemberId,
-      splitType: 'EXACT',
-      category: 'other',
-      date: new Date().toISOString().split('T')[0],
-      notes: note,
-      isSettlement: true,
-      splits: [
-        { memberId: toMemberId, amount: Number(amount), percentage: 100 }
-      ]
-    };
+      setGroups((prev) =>
+        prev.map((grp) =>
+          grp.id === groupId && !grp.memberIds.includes(memberIdToAdd)
+            ? { ...grp, memberIds: [...grp.memberIds, memberIdToAdd] }
+            : grp
+        )
+      );
+      showToast(`Added ${labelName} to group`);
+      return memberIdToAdd;
+    },
+    [createMemberRecord, members, showToast]
+  );
 
-    setExpenses(prev => [settlementExpense, ...prev]);
-
-    setActivities(prev => [
-      {
-        id: `act-${Date.now()}`,
-        type: 'SETTLEMENT',
-        title: `Settled payment of $${amount}`,
-        amount: Number(amount),
+  const recordSettlement = useCallback(
+    ({ groupId, fromMemberId, toMemberId, amount, method = 'UPI', note = '' }) => {
+      const newSettlement = {
+        id: `stl-${Date.now()}`,
+        groupId: groupId || groups[0]?.id || 'general',
         fromMemberId,
         toMemberId,
-        groupId: settlementExpense.groupId,
-        timestamp: new Date().toISOString()
-      },
-      ...prev
-    ]);
-  }, [activeGroupId, groups, membersMap, setExpenses, setActivities]);
+        amount: roundCurrency(amount),
+        method,
+        date: new Date().toISOString().slice(0, 10),
+        note: note.trim(),
+      };
+      setSettlements((prev) => [newSettlement, ...prev]);
+      showToast('Settlement payment recorded');
+      return newSettlement;
+    },
+    [groups, showToast]
+  );
 
-  const resetToSampleData = useCallback(() => {
+  const deleteSettlement = useCallback(
+    (settlementId) => {
+      setSettlements((prev) => prev.filter((s) => s.id !== settlementId));
+      showToast('Settlement record removed', 'neutral');
+    },
+    [showToast]
+  );
+
+  const resetDemoData = useCallback(() => {
     setMembers(INITIAL_MEMBERS);
     setGroups(INITIAL_GROUPS);
     setExpenses(INITIAL_EXPENSES);
-    setActivities(INITIAL_ACTIVITIES);
-    setActiveGroupId('grp-1');
-  }, [setMembers, setGroups, setExpenses, setActivities, setActiveGroupId]);
+    setSettlements(INITIAL_SETTLEMENTS);
+    setActiveUserId('aarav');
+    setCurrency('INR');
+    window.localStorage.removeItem(STORAGE_KEY);
+    showToast('Restored default demo dataset');
+  }, [showToast]);
 
-  const value = {
-    members,
-    groups,
-    expenses,
-    scopedExpenses,
-    activities,
-    activeGroupId,
-    setActiveGroupId,
-    activeGroup,
-    scopedMembers,
-    currentUserId,
-    currentUser,
-    membersMap,
-    categories: CATEGORIES,
-    netBalances,
-    simplifiedDebts,
-    currentUserNet,
-    currentUserOwed,
-    currentUserOwes,
-    totalSpend,
-    categoryBreakdown,
-    addExpense,
-    deleteExpense,
-    addGroup,
-    addMember,
-    settleDebt,
-    resetToSampleData
-  };
+  const openExpenseModal = useCallback(
+    ({ defaultGroupId = '', editingExpense = null } = {}) => {
+      setExpenseModalState({
+        isOpen: true,
+        defaultGroupId: defaultGroupId || groups[0]?.id || '',
+        editingExpense,
+      });
+    },
+    [groups]
+  );
+
+  const closeExpenseModal = useCallback(() => {
+    setExpenseModalState({
+      isOpen: false,
+      defaultGroupId: '',
+      editingExpense: null,
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      members,
+      groups,
+      expenses,
+      settlements,
+      activeUserId,
+      setActiveUserId,
+      activeUser,
+      currency,
+      setCurrency,
+      overallLedger,
+      overallTransfers,
+      groupSummaries,
+      activeUserSummary,
+      addExpense,
+      updateExpense,
+      deleteExpense,
+      addGroup,
+      addMemberToGroup,
+      recordSettlement,
+      deleteSettlement,
+      resetDemoData,
+      expenseModalState,
+      openExpenseModal,
+      closeExpenseModal,
+      toast,
+      dismissToast: () => setToast(null),
+    }),
+    [
+      members,
+      groups,
+      expenses,
+      settlements,
+      activeUserId,
+      activeUser,
+      currency,
+      overallLedger,
+      overallTransfers,
+      groupSummaries,
+      activeUserSummary,
+      addExpense,
+      updateExpense,
+      deleteExpense,
+      addGroup,
+      addMemberToGroup,
+      recordSettlement,
+      deleteSettlement,
+      resetDemoData,
+      expenseModalState,
+      openExpenseModal,
+      closeExpenseModal,
+      toast,
+    ]
+  );
 
   return (
-    <ExpenseContext.Provider value={value}>
-      {children}
-    </ExpenseContext.Provider>
+    <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>
   );
-};
+}
 
-export const useExpenses = () => {
-  const context = useContext(ExpenseContext);
-  if (!context) {
-    throw new Error('useExpenses must be used within an ExpenseProvider');
+export function useExpenses() {
+  const ctx = useContext(ExpenseContext);
+  if (!ctx) {
+    throw new Error('useExpenses must be used inside <ExpenseProvider>');
   }
-  return context;
-};
+  return ctx;
+}

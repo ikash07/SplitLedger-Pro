@@ -27,13 +27,13 @@ export const Card = ({
             justifyContent: 'space-between', 
             alignItems: 'flex-start',
             marginBottom: '1.25rem',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '2px dashed var(--border-subtle)',
             paddingBottom: '0.85rem'
           }}
         >
           <div>
             {title && (
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
                 {title}
               </h3>
             )}

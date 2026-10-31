@@ -1,33 +1,32 @@
 import React from 'react';
 import { 
-  Utensils, 
-  Plane, 
-  Home, 
-  ShoppingCart, 
-  Film, 
-  Zap, 
-  ShoppingBag, 
-  MoreHorizontal,
-  DollarSign
-} from 'lucide-react';
+  PizzaSliceIcon, 
+  RocketIcon, 
+  CottageIcon, 
+  PopcornIcon, 
+  ShoppingBagIcon, 
+  LightningIcon,
+  CoinIcon 
+} from '../components/common/CustomIcons';
+import { MoreHorizontal } from 'lucide-react';
 
-export const getCategoryIcon = (categoryId, size = 18) => {
+export const getCategoryIcon = (categoryId, size = 20) => {
   switch (categoryId) {
     case 'food':
-      return <Utensils size={size} />;
+      return <PizzaSliceIcon size={size} />;
     case 'travel':
-      return <Plane size={size} />;
+      return <RocketIcon size={size} />;
     case 'accommodation':
-      return <Home size={size} />;
+      return <CottageIcon size={size} />;
     case 'groceries':
-      return <ShoppingCart size={size} />;
+      return <ShoppingBagIcon size={size} />;
     case 'entertainment':
-      return <Film size={size} />;
+      return <PopcornIcon size={size} />;
     case 'utilities':
-      return <Zap size={size} />;
+      return <LightningIcon size={size} />;
     case 'shopping':
-      return <ShoppingBag size={size} />;
+      return <ShoppingBagIcon size={size} />;
     default:
-      return <MoreHorizontal size={size} />;
+      return <CoinIcon size={size} />;
   }
 };

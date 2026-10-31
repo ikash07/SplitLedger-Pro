@@ -1,0 +1,83 @@
+.statCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.iconBox {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.neutralIcon {
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.brandIcon {
+  background-color: #f0fdfa;
+  color: var(--brand-primary);
+}
+
+.positiveIcon {
+  background-color: var(--positive-bg);
+  color: var(--positive-ink);
+}
+
+.negativeIcon {
+  background-color: var(--negative-bg);
+  color: var(--negative-ink);
+}
+
+.value {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.neutralText {
+  color: var(--text-primary);
+}
+
+.positiveText {
+  color: var(--positive-ink);
+}
+
+.negativeText {
+  color: var(--negative-ink);
+}
+
+.brandText {
+  color: var(--brand-primary);
+}
+
+.subtext {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

@@ -74,7 +74,12 @@ export const ExpenseDetailsModal = ({ expense, isOpen, onClose }) => {
               {formatCurrency(expense.amount)}
             </span>
             <div style={{ marginTop: '0.2rem' }}>
-              <Badge variant="primary">{expense.splitType || 'EQUAL'}</Badge>
+              <Badge variant="neutral">
+                {expense.splitType === 'EQUAL' ? 'Split equally' :
+                 expense.splitType === 'EXACT' ? 'Exact split' :
+                 expense.splitType === 'PERCENTAGE' ? '% split' :
+                 expense.splitType === 'SHARES' ? 'By shares' : 'Split equally'}
+              </Badge>
             </div>
           </div>
         </div>

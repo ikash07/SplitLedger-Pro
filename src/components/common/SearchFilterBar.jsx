@@ -35,7 +35,7 @@ export const SearchFilterBar = ({
         />
         <input
           type="text"
-          placeholder="Search expenses by title, notes, or tags..."
+          placeholder="Search bills by title or notes..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="form-input"
@@ -89,9 +89,9 @@ export const SearchFilterBar = ({
             >
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
-              <option value="amount-desc">Amount: High to Low</option>
-              <option value="amount-asc">Amount: Low to High</option>
-              <option value="title-asc">Title: A to Z</option>
+              <option value="amount-desc">Highest Amount</option>
+              <option value="amount-asc">Lowest Amount</option>
+              <option value="title-asc">A to Z</option>
             </select>
           </div>
         )}

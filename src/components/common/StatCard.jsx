@@ -11,17 +11,17 @@ export const StatCard = ({
   className = ''
 }) => {
   const variantGradients = {
-    primary: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
+    primary: 'linear-gradient(135deg, rgba(255, 75, 114, 0.2) 0%, rgba(255, 101, 132, 0.1) 100%)',
     success: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)',
     danger: 'linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(225, 29, 72, 0.1) 100%)',
-    cyan: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(14, 165, 233, 0.1) 100%)'
+    cyan: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)'
   };
 
   const iconColors = {
-    primary: '#818CF8',
-    success: '#34D399',
-    danger: '#FB7185',
-    cyan: '#38BDF8'
+    primary: '#FF4B72',
+    success: '#10B981',
+    danger: '#F43F5E',
+    cyan: '#3B82F6'
   };
 
   return (

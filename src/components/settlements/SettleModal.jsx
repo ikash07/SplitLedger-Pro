@@ -20,7 +20,7 @@ export const SettleModal = ({
   const [creditorId, setCreditorId] = useState(defaultCreditorId || scopedMembers[1]?.id);
   const [amount, setAmount] = useState(defaultAmount || '');
   const [paymentMethod, setPaymentMethod] = useState('UPI / Bank Transfer');
-  const [note, setNote] = useState('Settled shared expense via app');
+  const [note, setNote] = useState('Paid share');
   const [settledSuccess, setSettledSuccess] = useState(false);
 
   const debtor = membersMap[debtorId] || { name: 'Payer' };
@@ -58,7 +58,7 @@ export const SettleModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Record Payment & Settle Up"
+      title="Record a Payment"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={settledSuccess}>
@@ -70,7 +70,7 @@ export const SettleModal = ({
             onClick={handleSubmit} 
             disabled={settledSuccess || !amount || Number(amount) <= 0}
           >
-            {settledSuccess ? 'Settled Successfully! 🎉' : 'Confirm Settlement'}
+            {settledSuccess ? 'Payment Recorded! 🎉' : 'Record Payment'}
           </Button>
         </>
       }
@@ -111,7 +111,7 @@ export const SettleModal = ({
         {/* Member Selectors */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Who Paid (Debtor)</label>
+            <label className="form-label">Who gave money?</label>
             <select 
               value={debtorId} 
               onChange={(e) => setDebtorId(e.target.value)}
@@ -124,7 +124,7 @@ export const SettleModal = ({
           </div>
 
           <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Paid To (Creditor)</label>
+            <label className="form-label">Who got money?</label>
             <select 
               value={creditorId} 
               onChange={(e) => setCreditorId(e.target.value)}

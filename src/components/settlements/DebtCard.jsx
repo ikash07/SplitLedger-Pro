@@ -1,85 +1,70 @@
 import React, { useState } from 'react';
-import { ArrowRight, CheckCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCheck } from 'lucide-react';
 import { Avatar } from '../common/Avatar';
 import { Button } from '../common/Button';
 import { formatCurrency } from '../../utils/formatters';
 import { SettleModal } from './SettleModal';
 
+/**
+ * DebtCard: shows "Person A → pays $XX → Person B" in plain English
+ */
 export const DebtCard = ({ transaction }) => {
   const [modalOpen, setModalOpen] = useState(false);
+
+  const fromName = transaction.fromMember.name;
+  const toName = transaction.toMember.name;
 
   return (
     <>
       <div 
         className="glass-panel"
         style={{
-          padding: '1.25rem 1.5rem',
+          padding: '1rem 1.25rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '1rem',
-          marginBottom: '0.85rem'
+          gap: '0.85rem',
+          marginBottom: '0.75rem'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1 1 280px' }}>
-          {/* Debtor */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Avatar 
-              name={transaction.fromMember.name} 
-              color={transaction.fromMember.avatarColor || '#F43F5E'} 
-              size={36} 
-            />
-            <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
-                {transaction.fromMember.name}
-              </div>
-              <span style={{ fontSize: '0.725rem', color: '#fb7185', fontWeight: 500 }}>
-                owes
-              </span>
-            </div>
-          </div>
+        {/* Left: who pays whom, in a readable sentence */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 260px' }}>
+          <Avatar 
+            name={fromName} 
+            color={transaction.fromMember.avatarColor || '#F43F5E'} 
+            size={38} 
+          />
 
-          <div 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              width: '32px', 
-              height: '32px', 
-              borderRadius: '50%', 
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)'
-            }}
-          >
-            <ArrowRight size={16} color="var(--primary)" />
-          </div>
+          <span style={{ fontSize: '1.25rem' }}>➡️</span>
 
-          {/* Creditor */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Avatar 
-              name={transaction.toMember.name} 
-              color={transaction.toMember.avatarColor || '#10B981'} 
-              size={36} 
-            />
-            <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
-                {transaction.toMember.name}
-              </div>
-              <span style={{ fontSize: '0.725rem', color: '#34d399', fontWeight: 500 }}>
-                is owed
-              </span>
+          <Avatar 
+            name={toName} 
+            color={transaction.toMember.avatarColor || '#10B981'} 
+            size={38} 
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', marginLeft: '0.25rem' }}>
+            {/* Plain-English sentence: "Rohan pays Priya" */}
+            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
+              {fromName.split(' ')[0]} <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>pays</span> {toName.split(' ')[0]}
             </div>
+            <span style={{ fontSize: '0.78rem', color: '#10B981', fontWeight: 700 }}>
+              To be all square 🤝
+            </span>
           </div>
         </div>
 
-        {/* Amount & Settle Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-heading)', color: '#ffffff' }}>
-              {formatCurrency(transaction.amount)}
-            </span>
-          </div>
+        {/* Right: amount + action */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span 
+            style={{ 
+              fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-heading)', 
+              color: 'var(--text-primary)' 
+            }}
+          >
+            {formatCurrency(transaction.amount)}
+          </span>
 
           <Button
             variant="success"
@@ -87,7 +72,7 @@ export const DebtCard = ({ transaction }) => {
             icon={CheckCheck}
             onClick={() => setModalOpen(true)}
           >
-            Settle Up
+            Mark Paid
           </Button>
         </div>
       </div>

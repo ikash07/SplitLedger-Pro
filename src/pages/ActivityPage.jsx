@@ -13,9 +13,9 @@ export const ActivityPage = () => {
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.85rem' }}>Audit Trail & Activity</h1>
+        <h1 style={{ fontSize: '1.85rem' }}>📜 What Happened (History)</h1>
         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-          Real-time timeline of expenses added, updated, and debt settlements
+          A timeline of every bill added and friend who got paid back!
         </p>
       </div>
 

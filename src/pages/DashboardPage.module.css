@@ -1,0 +1,55 @@
+.dashboardLayout {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 22px;
+  margin-top: 22px;
+  align-items: start;
+}
+
+.columnStack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.groupMiniGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.groupMiniCard {
+  padding: 15px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background-color: #fcfdfd;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.14s ease;
+}
+
+.groupMiniCard:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.expenseFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settlementStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 880px) {
+  .dashboardLayout {
+    grid-template-columns: 1fr;
+  }
+}

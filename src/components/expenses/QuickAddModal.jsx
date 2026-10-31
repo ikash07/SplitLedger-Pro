@@ -8,7 +8,7 @@ import { Badge } from '../common/Badge';
 import { useExpenses } from '../../context/ExpenseContext';
 import { formatCurrency } from '../../utils/formatters';
 
-export const QuickAddModal = ({ isOpen, onClose }) => {
+export const QuickAddModal = ({ isOpen, onClose, initialCategory = 'food' }) => {
   const { 
     groups, 
     activeGroupId, 
@@ -21,7 +21,7 @@ export const QuickAddModal = ({ isOpen, onClose }) => {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState(currentUserId);
-  const [category, setCategory] = useState('food');
+  const [category, setCategory] = useState(initialCategory || 'food');
   const [groupId, setGroupId] = useState(activeGroupId !== 'all' ? activeGroupId : groups[0]?.id || '');
 
   const activeGroup = groups.find(g => g.id === groupId) || groups[0];
@@ -65,11 +65,11 @@ export const QuickAddModal = ({ isOpen, onClose }) => {
   };
 
   const quickCategories = [
-    { id: 'food', label: 'Food', emoji: '🍔' },
-    { id: 'travel', label: 'Travel', emoji: '🚕' },
-    { id: 'groceries', label: 'Groceries', emoji: '🛒' },
-    { id: 'entertainment', label: 'Fun', emoji: '🎉' },
-    { id: 'utilities', label: 'Bills', emoji: '⚡' },
+    { id: 'food', label: 'Pizza & Food', emoji: '🍕' },
+    { id: 'entertainment', label: 'Movies & Fun', emoji: '🍿' },
+    { id: 'groceries', label: 'Snacks & Drinks', emoji: '🧃' },
+    { id: 'travel', label: 'Rides & Travel', emoji: '🚀' },
+    { id: 'accommodation', label: 'Stays', emoji: '🏠' },
     { id: 'other', label: 'Other', emoji: '✨' }
   ];
 
@@ -77,18 +77,17 @@ export const QuickAddModal = ({ isOpen, onClose }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="⚡ 1-Click Quick Split"
+      title="⚡ 1-Tap Quick Split"
       maxWidth={500}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button 
             variant="primary" 
-            icon={Zap} 
             onClick={handleSubmit}
             disabled={!title.trim() || numAmount <= 0}
           >
-            Split Evenly Now
+            🎉 Split Evenly Now!
           </Button>
         </>
       }
