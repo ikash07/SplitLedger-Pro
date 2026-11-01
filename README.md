@@ -1,4 +1,4 @@
-# 💸 SplitLedger — Shared Expense Splitter
+# 💸 SplitLedger pro — Shared Expense Splitter
 
 A modern, responsive shared expense tracking and debt settlement web application built with **React 18**, **Vite**, and **React Router**.
 
